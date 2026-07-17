@@ -1,5 +1,7 @@
 public class CollectionFormatterRegistryTests
 {
+    static readonly string[] FourStrings = ["A", "B", "C", "D"];
+
     [Theory]
     [InlineData("af", "1 en 2", "1, 2 en 3")]
     [InlineData("az", "1 və 2", "1, 2 və 3")]
@@ -40,4 +42,8 @@ public class CollectionFormatterRegistryTests
         Assert.Equal(expectedTwo, formatter.Humanize([1, 2]));
         Assert.Equal(expectedThree, formatter.Humanize([1, 2, 3]));
     }
+
+    [Fact]
+    public void DefaultCollectionFormatterJoinsLongerCollections() =>
+        Assert.Equal("A, B, C et D", Configurator.CollectionFormatters.ResolveForCulture(new("fr")).Humanize(FourStrings));
 }
