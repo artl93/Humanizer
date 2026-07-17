@@ -255,7 +255,11 @@ public static class MetricNumeralExtensions
         ArgumentNullException.ThrowIfNull(input);
 
         input = input.Trim();
-        input = ReplaceNameBySymbol(input);
+        if (input.Length > 0 && char.IsLetter(input[^1]) && !HasSymbolSuffix(input))
+        {
+            input = ReplaceNameBySymbol(input);
+        }
+
         if (input.Length == 0 || input.IsInvalidMetricNumeral())
         {
             throw new ArgumentException("Empty or invalid Metric string.", nameof(input));
@@ -263,6 +267,10 @@ public static class MetricNumeralExtensions
 
         return input.Replace(" ", string.Empty);
     }
+
+    static bool HasSymbolSuffix(string input) =>
+        UnitPrefixes.ContainsKey(input[^1]) &&
+        (input.Length == 1 || !char.IsLetter(input[^2]));
 
     /// <summary>
     /// Build a number from a metric representation or from a number
@@ -303,9 +311,15 @@ public static class MetricNumeralExtensions
     /// </summary>
     /// <param name="input">Metric representation with a name or a symbol</param>
     /// <returns>A metric representation with a symbol</returns>
-    static string ReplaceNameBySymbol(string input) =>
-        UnitPrefixes.Aggregate(input, (current, unitPrefix) =>
-            current.Replace(unitPrefix.Value.Name, unitPrefix.Key.ToString()));
+    static string ReplaceNameBySymbol(string input)
+    {
+        foreach (var unitPrefix in UnitPrefixes)
+        {
+            input = input.Replace(unitPrefix.Value.Name, GetSymbolText(unitPrefix.Key));
+        }
+
+        return input;
+    }
 
     /// <summary>
     /// Build a Metric representation of the number.
@@ -496,8 +510,30 @@ public static class MetricNumeralExtensions
             }
         }
 
-        return symbol.ToString();
+        return GetSymbolText(symbol);
     }
+
+    static string GetSymbolText(char symbol) =>
+        symbol switch
+        {
+            'k' => "k",
+            'M' => "M",
+            'G' => "G",
+            'T' => "T",
+            'P' => "P",
+            'E' => "E",
+            'Z' => "Z",
+            'Y' => "Y",
+            'm' => "m",
+            'μ' => "μ",
+            'n' => "n",
+            'p' => "p",
+            'f' => "f",
+            'a' => "a",
+            'z' => "z",
+            'y' => "y",
+            _ => symbol.ToString()
+        };
 
     /// <summary>
     /// Check if a Metric representation is out of the valid range.

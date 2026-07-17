@@ -21,6 +21,13 @@ public class MetricNumeralTests
         Assert.Equal(expected, input.FromMetric());
 
     [Theory]
+    [InlineData(1E6, "1 mega")]
+    [InlineData(1E-18, "1a")]
+    [InlineData(1E-18, "1 a")]
+    public void FromMetricDistinguishesNamesFromSymbolSuffixes(double expected, string input) =>
+        Assert.Equal(expected, input.FromMetric());
+
+    [Theory]
     [InlineData("")]
     [InlineData(" ")]
     [InlineData("\t")]
