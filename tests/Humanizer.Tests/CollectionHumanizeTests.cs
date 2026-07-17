@@ -11,6 +11,7 @@ public class CollectionHumanizeTests
 {
     static readonly object?[] NullObjects = [null, null];
     static readonly string[] ThreeStrings = ["A", "B", "C"];
+    static readonly string[] FourStrings = ["A", "B", "C", "D"];
     static readonly int?[] NullableInts = [1, null, 3];
     static readonly string[] StringsWithEmptyItem = ["A", " ", "C"];
     static readonly string[] StringsWithWhitespace = ["A", "  B  ", "C"];
@@ -59,6 +60,10 @@ public class CollectionHumanizeTests
 
         Assert.Equal("A String, Another String, or A Third String", collection.Humanize("or"));
     }
+
+    [Fact]
+    public void HumanizeUsesOxfordCommaForLongerCollections() =>
+        Assert.Equal("A, B, C, or D", FourStrings.Humanize("or"));
 
     readonly List<SomeClass> testCollection =
     [

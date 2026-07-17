@@ -93,17 +93,58 @@ class DefaultCollectionFormatter(string defaultSeparator) : ICollectionFormatter
         }
 
         var conjunctionFormat = GetConjunctionFormatString(count);
-        if (conjunctionFormat == "{0} {1} {2}")
+        if (conjunctionFormat is "{0} {1} {2}" or "{0}, {1} {2}")
         {
             return count == 2
                 ? string.Concat(items[0], " ", separator, " ", items[1])
-                : string.Concat(JoinLeadingItems(items), " ", separator, " ", items[^1]);
+                : JoinItems(items, separator ?? string.Empty, conjunctionFormat == "{0}, {1} {2}");
         }
 
         return string.Format(conjunctionFormat,
             JoinLeadingItems(items),
             separator,
             items[^1]);
+    }
+
+    static string JoinItems(List<string> items, string separator, bool useOxfordComma)
+    {
+        var length = separator.Length + (useOxfordComma ? 3 : 2);
+        for (var i = 0; i < items.Count; i++)
+        {
+            length += items[i].Length;
+            if (i < items.Count - 2)
+            {
+                length += 2;
+            }
+        }
+
+        return string.Create(length, (items, separator, useOxfordComma), static (destination, state) =>
+        {
+            var offset = 0;
+            for (var i = 0; i < state.items.Count - 1; i++)
+            {
+                if (i > 0)
+                {
+                    ", ".AsSpan().CopyTo(destination[offset..]);
+                    offset += 2;
+                }
+
+                var item = state.items[i];
+                item.AsSpan().CopyTo(destination[offset..]);
+                offset += item.Length;
+            }
+
+            if (state.useOxfordComma)
+            {
+                destination[offset++] = ',';
+            }
+
+            destination[offset++] = ' ';
+            state.separator.AsSpan().CopyTo(destination[offset..]);
+            offset += state.separator.Length;
+            destination[offset++] = ' ';
+            state.items[^1].AsSpan().CopyTo(destination[offset..]);
+        });
     }
 
     static string JoinLeadingItems(List<string> items)
